@@ -30,7 +30,11 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
+        # Install/update instructions first; GitHub's generated changelog is appended after them.
         run: |
+          sed -e "s#{{TAG}}#$GITHUB_REF_NAME#g" -e "s#{{REPO}}#$GITHUB_REPOSITORY#g" \
+            .github/release-notes.md > "$RUNNER_TEMP/notes.md"
           gh release create "$GITHUB_REF_NAME" dist/ai-usage@local.shell-extension.zip \
             --title "$GITHUB_REF_NAME" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
             --generate-notes
