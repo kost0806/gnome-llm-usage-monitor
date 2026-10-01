@@ -78,9 +78,18 @@ class ProgressBar {
         this.actor = new St.Widget({
             style_class: 'ai-usage-bar',
             style: `width: ${BAR_WIDTH_PX}px;`,
+            // Keep the track at exactly BAR_WIDTH_PX so 100% fills it; the
+            // fill's x_expand would otherwise propagate up and stretch it.
+            x_expand: false,
+            x_align: Clutter.ActorAlign.START,
             layout_manager: new Clutter.BinLayout(),
         });
-        this._fill = new St.Widget({style_class: 'ai-usage-bar-fill', x_align: Clutter.ActorAlign.START});
+        // BinLayout ignores x_align unless x_expand is set (it centers the child otherwise).
+        this._fill = new St.Widget({
+            style_class: 'ai-usage-bar-fill',
+            x_expand: true,
+            x_align: Clutter.ActorAlign.START,
+        });
         this.actor.add_child(this._fill);
         this.setPercent(0);
     }
