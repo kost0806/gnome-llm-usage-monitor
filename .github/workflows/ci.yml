@@ -27,14 +27,18 @@ jobs:
       - name: Validate metadata.json
         run: jq -e '.uuid == "ai-usage@local" and (."shell-version" | length > 0)' ai-usage@local/metadata.json
 
-      - name: Lint install.sh
-        run: shellcheck install.sh
+      - name: Lint shell scripts
+        run: shellcheck install.sh scripts/pack.sh
 
       - name: Build extension zip
-        run: ./scripts/pack.sh
+        id: pack
+        run: |
+          zip=$(./scripts/pack.sh "dev-${GITHUB_SHA::7}")
+          echo "zip=$zip" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$zip" .zip)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v7
         with:
-          name: ai-usage@local.shell-extension
-          path: dist/ai-usage@local.shell-extension.zip
+          name: ${{ steps.pack.outputs.name }}
+          path: ${{ steps.pack.outputs.zip }}
           if-no-files-found: error

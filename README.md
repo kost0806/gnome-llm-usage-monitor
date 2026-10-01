@@ -15,7 +15,7 @@ Ubuntu 상단바에 Claude Enterprise 사용 금액과 Codex 크레딧 사용량
 릴리즈 zip:
 
 ```sh
-gnome-extensions install --force ai-usage@local.shell-extension.zip
+gnome-extensions install --force ai-usage@local-<버전>.shell-extension.zip
 # 로그아웃 → 로그인 후
 gnome-extensions enable ai-usage@local
 ```
@@ -52,7 +52,7 @@ gnome-extensions enable ai-usage@local
 ```sh
 npm test        # 순수 모듈 단위 테스트 (format / parse / codexPath)
 npm run check   # GJS 모듈 문법 검사
-./scripts/pack.sh 1.0.0   # dist/ai-usage@local.shell-extension.zip
+./scripts/pack.sh 1.0.0   # dist/ai-usage@local-1.0.0.shell-extension.zip
 ```
 
 릴리즈: `git tag v1.0.0 && git push origin v1.0.0` → GitHub Actions가 테스트 후 zip을 릴리즈에 첨부합니다.

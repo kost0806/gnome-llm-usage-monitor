@@ -3,8 +3,8 @@
 GNOME Shell 50 (Ubuntu 26.04, Wayland) 기준.
 
 ```sh
-gh release download {{TAG}} -R {{REPO}} -p 'ai-usage@local.shell-extension.zip'
-gnome-extensions install --force ai-usage@local.shell-extension.zip
+gh release download {{TAG}} -R {{REPO}} -p '{{ASSET}}'
+gnome-extensions install --force {{ASSET}}
 ```
 
 Wayland에서는 Shell을 재시작할 수 없으므로 **로그아웃 → 로그인** 후 활성화합니다.
@@ -18,8 +18,8 @@ gnome-extensions enable ai-usage@local
 ## 업데이트
 
 ```sh
-gh release download {{TAG}} -R {{REPO}} -p 'ai-usage@local.shell-extension.zip' --clobber
-gnome-extensions install --force ai-usage@local.shell-extension.zip
+gh release download {{TAG}} -R {{REPO}} -p '{{ASSET}}' --clobber
+gnome-extensions install --force {{ASSET}}
 ```
 
 설치 후 **로그아웃 → 로그인**하면 새 버전이 적용됩니다 (활성화 상태는 유지됨). 적용된 버전 확인: `gnome-extensions info ai-usage@local`
