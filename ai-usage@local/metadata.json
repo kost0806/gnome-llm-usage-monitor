@@ -1,0 +1,6 @@
+{
+  "uuid": "ai-usage@local",
+  "name": "AI Usage",
+  "description": "Claude / Codex enterprise usage in the top bar",
+  "shell-version": ["50"]
+}

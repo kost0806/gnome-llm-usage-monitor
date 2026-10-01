@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Unit tests (pure modules)
+        run: npm test
+
+      - name: Syntax check (GJS modules)
+        run: npm run check
+
+      - name: Validate metadata.json
+        run: jq -e '.uuid == "ai-usage@local" and (."shell-version" | length > 0)' ai-usage@local/metadata.json
+
+      - name: Lint install.sh
+        run: shellcheck install.sh
+
+      - name: Build extension zip
+        run: ./scripts/pack.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ai-usage@local.shell-extension
+          path: dist/ai-usage@local.shell-extension.zip
+          if-no-files-found: error

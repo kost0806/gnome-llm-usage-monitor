@@ -1,0 +1,44 @@
+/* Panel: icon–text 6px, group gap 14px, tabular numbers (design 01). */
+.ai-usage-panel {
+    spacing: 14px;
+}
+
+.ai-usage-group {
+    spacing: 6px;
+}
+
+.ai-usage-value {
+    font-feature-settings: "tnum";
+}
+
+/* Dropdown menu */
+.ai-usage-block {
+    spacing: 6px;
+}
+
+.ai-usage-block-header {
+    spacing: 8px;
+    font-weight: bold;
+}
+
+.ai-usage-bar {
+    height: 4px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.14);
+}
+
+.ai-usage-bar-fill {
+    height: 4px;
+    border-radius: 2px;
+    background-color: #ffffff;
+}
+
+.ai-usage-dim {
+    font-size: 0.9em;
+    color: #a8a8ad;
+}
+
+.ai-usage-error {
+    font-size: 0.9em;
+    color: #ff8a7a;
+}
