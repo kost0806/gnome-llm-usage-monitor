@@ -5,6 +5,8 @@ const WARNING_PERCENT = 75;
 const CRITICAL_PERCENT = 95;
 const NONE = '—';
 
+const NORMAL_FILL = '#ffffff';
+
 const SEVERITY_COLORS = Object.freeze({
     normal: null,
     warning: '#f5c26b',
@@ -33,16 +35,19 @@ export function severityColor(severity) {
     return SEVERITY_COLORS[severity] ?? null;
 }
 
-function wholeUnits(value, suffix) {
-    return typeof value === 'number' ? `${Math.floor(value)}${suffix}` : NONE;
+// Bar/capsule fill: severity color, plain white while normal.
+export function fillColor(percent) {
+    return severityColor(severityOf(percent)) ?? NORMAL_FILL;
 }
 
-// Claude: "23$ / 233$ (10%)", Codex: "121c / 5875c (2%)"
-export function panelText(provider, usage) {
-    const suffix = provider === 'claude' ? '$' : 'c';
-    const percent = percentOf(usage);
-    const percentPart = percent === null ? NONE : `${percent}%`;
-    return `${wholeUnits(usage.used, suffix)} / ${wholeUnits(usage.limit, suffix)} (${percentPart})`;
+// Filled width in px; overuse (>100%) fills the track, unknown is empty.
+export function fillWidthPx(percent, trackWidth) {
+    const clamped = Math.max(0, Math.min(100, percent ?? 0));
+    return Math.round(trackWidth * clamped / 100);
+}
+
+function wholeUnits(value, suffix) {
+    return typeof value === 'number' ? `${Math.floor(value)}${suffix}` : NONE;
 }
 
 function dollars(value) {
@@ -56,7 +61,8 @@ export function menuAmountText(provider, usage) {
     return `${wholeUnits(usage.used, '')} / ${wholeUnits(usage.limit, '')} 크레딧`;
 }
 
-export function menuPercentText(usage) {
+// Panel capsule and menu: "10%", or "—" without a usable limit.
+export function percentText(usage) {
     const percent = percentOf(usage);
     return percent === null ? NONE : `${percent}%`;
 }

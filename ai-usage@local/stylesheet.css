@@ -1,10 +1,44 @@
-/* Panel: icon–text 6px, group gap 14px, tabular numbers (design 01). */
+/* Panel: icon–capsule 6px, group gap 14px (design 01). */
 .ai-usage-panel {
     spacing: 14px;
 }
 
 .ai-usage-group {
     spacing: 6px;
+}
+
+/* Fill capsule (design 2d / C). Width must match CAPSULE_WIDTH_PX in indicator.js. */
+.ai-usage-capsule {
+    width: 60px;
+    height: 18px;
+    border-radius: 9px;
+    background-color: rgba(255, 255, 255, 0.22);
+}
+
+.ai-usage-capsule-layer {
+    width: 60px;
+    height: 18px;
+}
+
+/* Width and background-color are set inline per update. */
+.ai-usage-capsule-fill {
+    height: 18px;
+    border-radius: 9px 0 0 9px;
+}
+
+.ai-usage-capsule-fill-full {
+    border-radius: 9px;
+}
+
+.ai-usage-capsule-text {
+    font-size: 12px;
+    font-weight: bold;
+    font-feature-settings: "tnum";
+    color: #ffffff;
+}
+
+.ai-usage-capsule-text-filled {
+    color: #000000;
 }
 
 .ai-usage-value {

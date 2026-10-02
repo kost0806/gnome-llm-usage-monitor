@@ -5,9 +5,10 @@ import {
     percentOf,
     severityOf,
     severityColor,
-    panelText,
+    fillColor,
+    fillWidthPx,
     menuAmountText,
-    menuPercentText,
+    percentText,
     resetText,
     clockText,
     footerText,
@@ -41,20 +42,24 @@ test('severityColor maps to design colors, null for normal', () => {
     assert.equal(severityColor('critical'), '#ff8a7a');
 });
 
-test('panelText formats Claude dollars floored', () => {
-    assert.equal(panelText('claude', {used: 23.4, limit: 233}), '23$ / 233$ (10%)');
-    assert.equal(panelText('claude', {used: 23.99, limit: 233.5}), '23$ / 233$ (10%)');
-    assert.equal(panelText('claude', {used: 186.7, limit: 233}), '186$ / 233$ (80%)');
+test('fillColor is white for normal and the severity color otherwise', () => {
+    assert.equal(fillColor(10), '#ffffff');
+    assert.equal(fillColor(null), '#ffffff');
+    assert.equal(fillColor(80), '#f5c26b');
+    assert.equal(fillColor(96), '#ff8a7a');
 });
 
-test('panelText formats Codex credits without thousands separator', () => {
-    assert.equal(panelText('codex', {used: 121, limit: 5875}), '121c / 5875c (2%)');
-    assert.equal(panelText('codex', {used: 12345.6, limit: 20000}), '12345c / 20000c (62%)');
+test('fillWidthPx scales percent to the track width', () => {
+    assert.equal(fillWidthPx(10, 60), 6);
+    assert.equal(fillWidthPx(2, 60), 1);
+    assert.equal(fillWidthPx(96, 60), 58);
+    assert.equal(fillWidthPx(50, 300), 150);
 });
 
-test('panelText shows (—) when limit is unusable', () => {
-    assert.equal(panelText('claude', {used: 23, limit: 0}), '23$ / 0$ (—)');
-    assert.equal(panelText('codex', {used: 7, limit: null}), '7c / — (—)');
+test('fillWidthPx clamps to the track and treats null as empty', () => {
+    assert.equal(fillWidthPx(null, 60), 0);
+    assert.equal(fillWidthPx(-5, 60), 0);
+    assert.equal(fillWidthPx(140, 60), 60);
 });
 
 test('menuAmountText uses two decimals for Claude and credits label for Codex', () => {
@@ -63,9 +68,10 @@ test('menuAmountText uses two decimals for Claude and credits label for Codex', 
     assert.equal(menuAmountText('codex', {used: 121, limit: null}), '121 / — 크레딧');
 });
 
-test('menuPercentText', () => {
-    assert.equal(menuPercentText({used: 23.4, limit: 233}), '10%');
-    assert.equal(menuPercentText({used: 1, limit: 0}), '—');
+test('percentText', () => {
+    assert.equal(percentText({used: 23.4, limit: 233}), '10%');
+    assert.equal(percentText({used: 6100, limit: 5875}), '104%');
+    assert.equal(percentText({used: 1, limit: 0}), '—');
 });
 
 test('resetText renders Korean month/day, null without date', () => {

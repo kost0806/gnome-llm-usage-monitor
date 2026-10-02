@@ -1,4 +1,4 @@
-// Panel button (two icon+label groups) and its dropdown menu.
+// Panel button (two icon+capsule groups) and its dropdown menu.
 // Rendering only: state, timers and fetching live in extension.js.
 //
 // Provider state shape: {data: {used, limit, resetsAt} | null, error: string | null, loading: boolean}
@@ -12,18 +12,18 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 import {
+    fillColor,
+    fillWidthPx,
     footerText,
     menuAmountText,
-    menuPercentText,
-    panelText,
     percentOf,
+    percentText,
     resetText,
-    severityColor,
-    severityOf,
 } from './format.js';
 
 const ICON_SIZE = 16;
 const BAR_WIDTH_PX = 300;
+const CAPSULE_WIDTH_PX = 60; // must match .ai-usage-capsule width in stylesheet.css
 const STALE_OPACITY = 128; // 50%
 const LOADING_TEXT = '…';
 const MISSING_TEXT = '—';
@@ -46,29 +46,81 @@ function isStale(state) {
     return state.error !== null && state.data !== null;
 }
 
-class PanelGroup {
-    constructor(provider, iconDir) {
-        this._provider = provider;
-        this.actor = new St.BoxLayout({style_class: 'ai-usage-group'});
-        this.actor.add_child(createIcon(iconDir, provider.icon));
-        this._label = new St.Label({
-            text: LOADING_TEXT,
-            style_class: 'ai-usage-value',
+// One capsule-sized layer holding a centered label.
+function createCapsuleLayer(labelClass) {
+    const label = new St.Label({
+        style_class: labelClass,
+        x_expand: true,
+        y_expand: true,
+        x_align: Clutter.ActorAlign.CENTER,
+        y_align: Clutter.ActorAlign.CENTER,
+    });
+    const layer = new St.Widget({
+        style_class: 'ai-usage-capsule-layer',
+        layout_manager: new Clutter.BinLayout(),
+    });
+    layer.add_child(label);
+    return [layer, label];
+}
+
+// Fill capsule (design 2d): the pill itself is the bar. The same label is
+// drawn twice: white on the track, and black inside the fill, which clips it
+// to the filled width so the text color flips exactly at the fill edge.
+class UsageCapsule {
+    constructor() {
+        // St.Widget's default FixedLayout stacks the layers at (0,0) at their
+        // CSS size, so the narrow fill never squeezes (and re-centers) its label.
+        // Explicit x/y_expand stops the labels' expand from stretching the pill.
+        this.actor = new St.Widget({
+            style_class: 'ai-usage-capsule',
+            clip_to_allocation: true,
+            x_expand: false,
+            y_expand: false,
             y_align: Clutter.ActorAlign.CENTER,
         });
-        this.actor.add_child(this._label);
+        const [base, baseLabel] = createCapsuleLayer('ai-usage-capsule-text');
+        const [front, frontLabel] = createCapsuleLayer('ai-usage-capsule-text ai-usage-capsule-text-filled');
+        this._fill = new St.Widget({style_class: 'ai-usage-capsule-fill', clip_to_allocation: true});
+        this._fill.add_child(front);
+        this.actor.add_child(base);
+        this.actor.add_child(this._fill);
+        this._labels = [baseLabel, frontLabel];
+    }
+
+    // percent null → empty track.
+    set(text, percent) {
+        this._labels.forEach(label => {
+            label.text = text;
+        });
+        const width = fillWidthPx(percent, CAPSULE_WIDTH_PX);
+        this._fill.visible = width > 0;
+        if (width === 0)
+            return;
+        this._fill.set_style(`width: ${width}px; background-color: ${fillColor(percent)};`);
+        // Square right edge while partial; fully rounded once it reaches the end.
+        if (width >= CAPSULE_WIDTH_PX)
+            this._fill.add_style_class_name('ai-usage-capsule-fill-full');
+        else
+            this._fill.remove_style_class_name('ai-usage-capsule-fill-full');
+    }
+}
+
+class PanelGroup {
+    constructor(provider, iconDir) {
+        this.actor = new St.BoxLayout({style_class: 'ai-usage-group'});
+        this.actor.add_child(createIcon(iconDir, provider.icon));
+        this._capsule = new UsageCapsule();
+        this._capsule.set(LOADING_TEXT, null);
+        this.actor.add_child(this._capsule.actor);
     }
 
     update(state) {
         if (!state.data) {
-            this._label.text = state.error ? MISSING_TEXT : LOADING_TEXT;
-            this._label.set_style(null);
+            this._capsule.set(state.error ? MISSING_TEXT : LOADING_TEXT, null);
             this.actor.opacity = 255;
             return;
         }
-        this._label.text = panelText(this._provider.key, state.data);
-        const color = severityColor(severityOf(percentOf(state.data)));
-        this._label.set_style(color ? `color: ${color};` : null);
+        this._capsule.set(percentText(state.data), percentOf(state.data));
         this.actor.opacity = isStale(state) ? STALE_OPACITY : 255;
     }
 }
@@ -95,9 +147,8 @@ class ProgressBar {
     }
 
     setPercent(percent) {
-        const clamped = Math.max(0, Math.min(100, percent ?? 0));
         // CSS px so St applies the display scale factor.
-        this._fill.set_style(`width: ${Math.round(BAR_WIDTH_PX * clamped / 100)}px;`);
+        this._fill.set_style(`width: ${fillWidthPx(percent, BAR_WIDTH_PX)}px;`);
     }
 }
 
@@ -134,7 +185,7 @@ class ProviderBlock {
         const {data, error} = state;
         if (data) {
             this._amount.text = menuAmountText(this._provider.key, data);
-            this._percent.text = menuPercentText(data);
+            this._percent.text = percentText(data);
         } else {
             this._amount.text = error ? MISSING_TEXT : LOADING_TEXT;
             this._percent.text = '';
