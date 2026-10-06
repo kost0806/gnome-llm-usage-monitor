@@ -5,6 +5,6 @@
   "description": "Dev-only: runs unit tests for the pure modules of ai-usage@local. GNOME Shell ignores this file.",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "check": "node --check ai-usage@local/extension.js && node --check ai-usage@local/lib/claude.js && node --check ai-usage@local/lib/codex.js && node --check ai-usage@local/lib/indicator.js"
+    "check": "node --check ai-usage@local/extension.js && node --check ai-usage@local/lib/claude.js && node --check ai-usage@local/lib/codex.js && node --check ai-usage@local/lib/indicator.js && node --check ai-usage@local/lib/pace.js"
   }
 }

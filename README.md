@@ -1,12 +1,14 @@
 # AI Usage — GNOME Shell extension
 
-Ubuntu 상단바에 Claude Enterprise 사용 금액과 Codex 크레딧 사용률을 채움 캡슐로 상시 표시합니다. 5분마다 갱신하며, 클릭하면 금액·크레딧 상세와 새로고침 메뉴가 열립니다.
+Ubuntu 상단바에 Claude Enterprise 사용 금액과 Codex 크레딧 사용률을 채움 캡슐로 상시 표시합니다. 5분마다 갱신하며, 클릭하면 금액·크레딧 상세, 기댓값 대비 페이스, 일평균, 두 AI 평균과 새로고침 메뉴가 열립니다.
 
 ```
 [✳ (██10%      )  ◎ (█2%        )]
 ```
 
 - 캡슐 채움 = 사용률. 75% 이상 노랑, 95% 이상 빨강. 오류 시 마지막 값을 반투명으로 유지.
+- 페이스: 주기는 매월 1일 초기화 기준 달력 월. 기댓값 = 경과일(오늘 포함) ÷ 그달 일수, 막대 위 눈금으로 표시. 사용률이 기댓값보다 높으면 `N%p 초과`(노랑), 아니면 `N%p 여유`. 일평균 = 사용량 ÷ 경과일.
+- 두 AI 평균: 두 사용률의 단순 평균. 한쪽이 오류이거나 값이 없으면 숨김.
 
 - 대상: GNOME Shell 50 (Ubuntu 26.04, Wayland). 다른 버전이면 `ai-usage@local/metadata.json`의 `shell-version`을 `gnome-shell --version` 메이저 값으로 바꾸세요.
 - Claude: Claude Code 로그인 토큰(`~/.claude/.credentials.json`)으로 `api.anthropic.com/api/oauth/usage` 조회. Admin 키 불필요.
@@ -52,7 +54,7 @@ gnome-extensions enable ai-usage@local
 ## 개발
 
 ```sh
-npm test        # 순수 모듈 단위 테스트 (format / parse / codexPath)
+npm test        # 순수 모듈 단위 테스트 (format / pace / parse / codexPath)
 npm run check   # GJS 모듈 문법 검사
 ./scripts/pack.sh 1.0.0   # dist/ai-usage@local-1.0.0.shell-extension.zip
 ```

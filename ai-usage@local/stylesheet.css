@@ -61,10 +61,24 @@
     background-color: rgba(255, 255, 255, 0.14);
 }
 
+/* Width and background-color are set inline per update. */
 .ai-usage-bar-fill {
     height: 4px;
     border-radius: 2px;
+}
+
+/* Expected-pace tick: 2×10px, ringed in the menu color to separate it from the fill.
+   Width must match TICK_WIDTH_PX in indicator.js. */
+.ai-usage-bar-tick {
+    width: 2px;
+    height: 10px;
+    border-radius: 1px;
     background-color: #ffffff;
+    box-shadow: 0 0 0 1.5px #2a2a2e;
+}
+
+.ai-usage-over {
+    color: #f5c26b;
 }
 
 .ai-usage-dim {
