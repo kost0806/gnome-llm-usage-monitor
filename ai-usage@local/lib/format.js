@@ -46,6 +46,12 @@ export function fillWidthPx(percent, trackWidth) {
     return Math.round(trackWidth * clamped / 100);
 }
 
+// "#rrggbb" → [r, g, b] in 0–1, as cairo's setSourceRGB(A) takes them.
+export function hexToRgb(hex) {
+    const value = parseInt(hex.slice(1), 16);
+    return [16, 8, 0].map(shift => ((value >> shift) & 0xff) / 255);
+}
+
 function wholeUnits(value, suffix) {
     return typeof value === 'number' ? `${Math.floor(value)}${suffix}` : NONE;
 }

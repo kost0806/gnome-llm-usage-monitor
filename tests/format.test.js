@@ -7,6 +7,7 @@ import {
     severityColor,
     fillColor,
     fillWidthPx,
+    hexToRgb,
     menuAmountText,
     percentText,
     resetText,
@@ -60,6 +61,12 @@ test('fillWidthPx clamps to the track and treats null as empty', () => {
     assert.equal(fillWidthPx(null, 60), 0);
     assert.equal(fillWidthPx(-5, 60), 0);
     assert.equal(fillWidthPx(140, 60), 60);
+});
+
+test('hexToRgb converts #rrggbb to 0–1 components for cairo', () => {
+    assert.deepEqual(hexToRgb('#ffffff'), [1, 1, 1]);
+    assert.deepEqual(hexToRgb('#000000'), [0, 0, 0]);
+    assert.deepEqual(hexToRgb('#ff8a7a'), [1, 0x8a / 255, 0x7a / 255]);
 });
 
 test('menuAmountText uses two decimals for Claude and credits label for Codex', () => {

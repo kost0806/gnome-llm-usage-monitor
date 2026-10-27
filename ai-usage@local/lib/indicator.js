@@ -15,6 +15,7 @@ import {
     fillColor,
     fillWidthPx,
     footerText,
+    hexToRgb,
     menuAmountText,
     percentOf,
     percentText,
@@ -33,7 +34,8 @@ const ICON_SIZE = 16;
 const BAR_WIDTH_PX = 300;
 const TICK_WIDTH_PX = 2; // must match .ai-usage-bar-tick width in stylesheet.css
 const TICK_TOP_PX = -3;
-const CAPSULE_WIDTH_PX = 60; // must match .ai-usage-capsule width in stylesheet.css
+const TRACK_COLOR = '#ffffff';
+const TRACK_ALPHA = 0.22;
 const STALE_OPACITY = 128; // 50%
 const LOADING_TEXT = '…';
 const MISSING_TEXT = '—';
@@ -56,7 +58,7 @@ function isStale(state) {
     return state.error !== null && state.data !== null;
 }
 
-// One capsule-sized layer holding a centered label.
+// A capsule-filling layer holding a centered label.
 function createCapsuleLayer(labelClass) {
     const label = new St.Label({
         style_class: labelClass,
@@ -66,34 +68,47 @@ function createCapsuleLayer(labelClass) {
         y_align: Clutter.ActorAlign.CENTER,
     });
     const layer = new St.Widget({
-        style_class: 'ai-usage-capsule-layer',
         layout_manager: new Clutter.BinLayout(),
+        x_expand: true,
+        y_expand: true,
     });
     layer.add_child(label);
     return [layer, label];
 }
 
-// Fill capsule (design 2d): the pill itself is the bar. The same label is
-// drawn twice: white on the track, and black inside the fill, which clips it
-// to the filled width so the text color flips exactly at the fill edge.
+// Pill outline spanning the whole width × height box.
+function pillPath(cr, width, height) {
+    const radius = Math.min(width, height) / 2;
+    cr.newPath();
+    cr.arc(radius, height / 2, radius, Math.PI / 2, 3 * Math.PI / 2);
+    cr.arc(width - radius, height / 2, radius, -Math.PI / 2, Math.PI / 2);
+    cr.closePath();
+}
+
+// Fill capsule (design 2d): the pill itself is the bar. Track and fill are
+// painted on one canvas with the fill clipped to the track's pill outline, so
+// the fill can never stick out of the track. The same label is drawn twice:
+// white on the track, and black clipped to the fill width, so the text color
+// flips exactly at the fill edge.
 class UsageCapsule {
     constructor() {
-        // St.Widget's default FixedLayout stacks the layers at (0,0) at their
-        // natural size, so the narrow fill never squeezes (and re-centers) its label.
-        // Explicit x/y_expand stops the labels' expand from stretching the pill.
+        this._percent = null;
+        // BinLayout gives every layer the capsule's full box. Explicit
+        // x/y_expand stops the layers' expand from stretching the pill.
         this.actor = new St.Widget({
             style_class: 'ai-usage-capsule',
-            clip_to_allocation: true,
+            layout_manager: new Clutter.BinLayout(),
             x_expand: false,
             y_expand: false,
             y_align: Clutter.ActorAlign.CENTER,
         });
+        this._canvas = new St.DrawingArea({x_expand: true, y_expand: true});
+        this._canvas.connect('repaint', area => this._repaint(area));
         const [base, baseLabel] = createCapsuleLayer('ai-usage-capsule-text');
         const [front, frontLabel] = createCapsuleLayer('ai-usage-capsule-text ai-usage-capsule-text-filled');
-        this._fill = new St.Widget({style_class: 'ai-usage-capsule-fill', clip_to_allocation: true});
-        this._fill.add_child(front);
-        this.actor.add_child(base);
-        this.actor.add_child(this._fill);
+        this._front = front;
+        this._front.visible = false;
+        [this._canvas, base, front].forEach(child => this.actor.add_child(child));
         this._labels = [baseLabel, frontLabel];
     }
 
@@ -102,19 +117,31 @@ class UsageCapsule {
         this._labels.forEach(label => {
             label.text = text;
         });
-        const width = fillWidthPx(percent, CAPSULE_WIDTH_PX);
-        this._fill.visible = width > 0;
-        if (width === 0)
-            return;
-        // St treats CSS width as a floor on the natural width, so the 60px label
-        // layer inside would stretch the fill to full width; max-width pins it.
-        this._fill.set_style(
-            `width: ${width}px; max-width: ${width}px; background-color: ${fillColor(percent)};`);
-        // Square right edge while partial; fully rounded once it reaches the end.
-        if (width >= CAPSULE_WIDTH_PX)
-            this._fill.add_style_class_name('ai-usage-capsule-fill-full');
-        else
-            this._fill.remove_style_class_name('ai-usage-capsule-fill-full');
+        this._percent = percent;
+        this._canvas.queue_repaint();
+    }
+
+    // Runs on every allocation and queue_repaint(); sizes are actor pixels.
+    _repaint(area) {
+        const cr = area.get_context();
+        const [width, height] = area.get_surface_size();
+        const fillWidth = fillWidthPx(this._percent, width);
+
+        pillPath(cr, width, height);
+        cr.clip();
+        cr.setSourceRGBA(...hexToRgb(TRACK_COLOR), TRACK_ALPHA);
+        cr.paint();
+        if (fillWidth > 0) {
+            // Square right edge while partial; the pill clip rounds it at 100%.
+            cr.rectangle(0, 0, fillWidth, height);
+            cr.setSourceRGB(...hexToRgb(fillColor(this._percent)));
+            cr.fill();
+        }
+        cr.$dispose();
+
+        // The front layer shares the canvas box, so the same pixels apply.
+        this._front.visible = fillWidth > 0;
+        this._front.set_clip(0, 0, fillWidth, height);
     }
 }
 

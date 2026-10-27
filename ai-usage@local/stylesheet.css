@@ -7,27 +7,11 @@
     spacing: 6px;
 }
 
-/* Fill capsule (design 2d / C). Width must match CAPSULE_WIDTH_PX in indicator.js. */
+/* Fill capsule (design 2d / C). Track and fill are painted in indicator.js
+   (UsageCapsule) on a canvas the size of this box. */
 .ai-usage-capsule {
     width: 60px;
     height: 18px;
-    border-radius: 9px;
-    background-color: rgba(255, 255, 255, 0.22);
-}
-
-.ai-usage-capsule-layer {
-    width: 60px;
-    height: 18px;
-}
-
-/* Width and background-color are set inline per update. */
-.ai-usage-capsule-fill {
-    height: 18px;
-    border-radius: 9px 0 0 9px;
-}
-
-.ai-usage-capsule-fill-full {
-    border-radius: 9px;
 }
 
 .ai-usage-capsule-text {
