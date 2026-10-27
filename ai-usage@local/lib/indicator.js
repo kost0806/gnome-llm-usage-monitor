@@ -79,7 +79,7 @@ function createCapsuleLayer(labelClass) {
 class UsageCapsule {
     constructor() {
         // St.Widget's default FixedLayout stacks the layers at (0,0) at their
-        // CSS size, so the narrow fill never squeezes (and re-centers) its label.
+        // natural size, so the narrow fill never squeezes (and re-centers) its label.
         // Explicit x/y_expand stops the labels' expand from stretching the pill.
         this.actor = new St.Widget({
             style_class: 'ai-usage-capsule',
@@ -106,7 +106,10 @@ class UsageCapsule {
         this._fill.visible = width > 0;
         if (width === 0)
             return;
-        this._fill.set_style(`width: ${width}px; background-color: ${fillColor(percent)};`);
+        // St treats CSS width as a floor on the natural width, so the 60px label
+        // layer inside would stretch the fill to full width; max-width pins it.
+        this._fill.set_style(
+            `width: ${width}px; max-width: ${width}px; background-color: ${fillColor(percent)};`);
         // Square right edge while partial; fully rounded once it reaches the end.
         if (width >= CAPSULE_WIDTH_PX)
             this._fill.add_style_class_name('ai-usage-capsule-fill-full');
